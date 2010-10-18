@@ -16,10 +16,10 @@
 		$.slideNoteCount += this.length;
 		
 		var opts = $.extend({}, $.fn.slideNote.defaults, $.fn.slideNote.private, options);
+
 		return this.each(function() {
 			
 			var $note = _init(this, opts);
-		
 			var oDoc = $.browser.msie === true ? window : document;
 			$(oDoc).scroll(function() {
 				if($(this).scrollTop() === 0) {
@@ -35,13 +35,14 @@
 					}
 				}
 			});
-			
 		});
 		
 	};
 	
 	function _init(obj, opts) {
-	
+
+		obj.notificationCount = 0; // added int to obj in order to maintain scope
+
 		$(obj).toggle()
 			.css(opts.corner, -1 * $(obj).outerWidth())
 			.css({
@@ -61,10 +62,20 @@
 		return $(obj);
 		
 	}
+
+        // method to validate if the SlideNote Object's Notification Limit has been reached
+        // we could modify this slightly to include all future logic surrounding
+        // if we want to display the note given some specified criteria
+        function _displayNote(obj,opts) {
+		return (obj.notificationCount == 0 || obj.notificationCount != opts.notificationLimit) ? true : false;
+        }
 	
 	function _slideIn(evt, obj, opts) {	
-		var direction = opts.corner === 'right' ? { 'right' : 0 } : { 'left' : 0 } ;
-		$(obj).show().animate(direction, 1000, 'swing');
+		if(_displayNote(obj,opts)) {
+			var direction = opts.corner === 'right' ? { 'right' : 0 } : { 'left' : 0 } ;
+			$(obj).show().animate(direction, 1000, 'swing');
+			obj.notificationCount++; //increment notification by one after animate
+		}
 	}
 	
 	function _slideOut(evt, obj, opts) {
@@ -114,13 +125,13 @@
 			$(obj).prepend(oImg);
 		}
 	}
-
 	$.fn.slideNote.defaults = {
 		where: 640,
 		corner: 'right',
 		url: null,
 		container: '',
-		closeImage: null
+		closeImage: null,
+		notificationLimit: 0 // how many times do we want to display the note to the user? notification limit defaults to 0, effectively unlimited 
 	};
 	
 	$.fn.slideNote.private = {
